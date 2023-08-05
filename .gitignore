@@ -6,4 +6,5 @@
 .env
 
 # Notebooks
-*.ipynb
+.ipynb
+auth.ipynb
