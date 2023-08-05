@@ -1,0 +1,9 @@
+# Python chache files
+**/__pycache__/**
+*.pyc
+
+# .env files
+.env
+
+# Notebooks
+*.ipynb
