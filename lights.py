@@ -1,11 +1,10 @@
 import os
 import json
-from collections.abc import Iterable
 
-
-import colour
 import requests
 from dotenv import load_dotenv
+
+from rgb import rgb_to_xy, rgb_to_bri
 
 
 load_dotenv()
@@ -71,14 +70,3 @@ def get_lights() -> list[Light]:
               for i, light in light_items
               if light["state"]["reachable"]]
     return lights
-
-
-def rgb_to_xy(rgb: Iterable) -> tuple[int, int]:
-    rgb_normalized = [x / 255.0 for x in rgb]
-    xyz = colour.sRGB_to_XYZ(rgb_normalized)
-    xy = colour.XYZ_to_xy(xyz)
-    return tuple(xy)
-
-
-def rgb_to_bri(rgb: Iterable) -> int:
-    return max(rgb)
