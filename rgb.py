@@ -16,7 +16,7 @@ def rgb_to_bri(rgb: Iterable[int]) -> int:
 
 def brighten_rgb(rgb: Iterable[int], factor: float) -> tuple[int, int, int]:
     # To fix color change due to my rgb_to_bri implementation
-    max_factor = max(rgb) / 255
+    max_factor = 255 / max(1, max(rgb))
     factor = min(factor, max_factor)
 
     brightened_rgb = [round(factor*val)
