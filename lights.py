@@ -8,8 +8,8 @@ from rgb import rgb_to_xy, rgb_to_bri
 
 
 load_dotenv()
-BRIDGE_IP = os.getenv("BRIDGE_IP")
-USERNAME = os.getenv("USERNAME")
+BRIDGE_IP = os.getenv("PHILIPSHUE_BRIDGE_IP")
+USERNAME = os.getenv("PHILIPSHUE_BRIDGE_USERNAME")
 BASE_URL = url = f"http://{BRIDGE_IP}/api/{USERNAME}"
 
 
