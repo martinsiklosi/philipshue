@@ -17,10 +17,15 @@ class Light:
     def __init__(self, nr: int) -> None:
         self.nr = nr
         self.supports_rgb = self._supports_rgb()
+        self.is_from_ikea = self._is_from_ikea()
 
     def _supports_rgb(self) -> bool:
         state = self.get_state()["state"]
         return "hue" in state
+    
+    def _is_from_ikea(self) -> bool:
+        manufacturer = self.get_state()["manufacturername"]
+        return "ikea" in manufacturer.lower()
 
     def get_state(self) -> dict:
         url = BASE_URL + f"/lights/{self.nr}"
@@ -70,3 +75,13 @@ def get_lights() -> list[Light]:
               for i, light in light_items
               if light["state"]["reachable"]]
     return lights
+
+
+def turn_on_all(lights: list[Light]) -> None:
+    for light in lights:
+        light.set_state(on=True)
+
+        
+def turn_off_all(lights: list[Light]) -> None:
+    for light in lights:
+        light.set_state(on=False)

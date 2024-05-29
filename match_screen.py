@@ -1,28 +1,27 @@
 from time import sleep
 from concurrent.futures import ThreadPoolExecutor, wait
 
-from lights import get_lights, Light
+from lights import get_lights, Light, turn_on_all, turn_off_all
 from screen import screen_rgb_stripes, screen_rgb_cubes
 from rgb import brighten_rgb
 
-lights = get_lights()
-rgb_lights = []
-white_lights = []
-for light in lights:
-    if light.supports_rgb:
-        rgb_lights.append(light)
-    else:
-        white_lights.append(light)
 
-for light in white_lights:
-    light.set_state(on=False)
-
-for light in rgb_lights:
-    light.set_state(on=True)
-
-trans_time_ms = 2000
-add_delay_ms = 0
-brightness_factor = 1.5
+TRANSITION_TIME_MS = 400
+ADD_DELAY_MS = 400
+BRIGHTNESS_FACTOR = 1.5
+MAX_WORKERS = 16
+        
+        
+def get_suitible_and_unsuitible_lights() -> tuple[list[Light], list[Light]]:
+    lights = get_lights()
+    suitible_lights = []
+    unsuitible_lights = []
+    for light in lights:
+        if light.is_from_ikea or not light.supports_rgb:
+            unsuitible_lights.append(light)
+        else:
+            suitible_lights.append(light)
+    return suitible_lights, unsuitible_lights
 
 
 def set_light_state(light: Light,
@@ -31,18 +30,27 @@ def set_light_state(light: Light,
                     trans_time_ms: int,
                     ) -> None:
     rgb_value = brighten_rgb(rgb=rgb_value, factor=brightness_factor)
-    light.set_state(rgb=rgb_value, time_ms=trans_time_ms)
+    res = light.set_state(rgb=rgb_value, time_ms=trans_time_ms)
+    print(res)
 
 
-while True:
-    rgb_values = screen_rgb_stripes(len(rgb_lights))
-    with ThreadPoolExecutor() as executor:
-        futures = []
-        for light, rgb_value in zip(rgb_lights, rgb_values):
-            futures.append(executor.submit(set_light_state,
-                                           light,
-                                           rgb_value,
-                                           brightness_factor,
-                                           trans_time_ms))
-        wait(futures)
-        sleep(add_delay_ms / 1000)
+def main() -> None:
+    suitible_lights, unsuitible_lights = get_suitible_and_unsuitible_lights()
+    turn_on_all(suitible_lights)
+    turn_off_all(unsuitible_lights)
+
+    while True:
+        rgb_values = screen_rgb_stripes(len(suitible_lights))
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            futures = []
+            for light, rgb_value in zip(suitible_lights, rgb_values):
+                futures.append(executor.submit(set_light_state,
+                                            light,
+                                            rgb_value,
+                                            BRIGHTNESS_FACTOR,
+                                            TRANSITION_TIME_MS))
+            wait(futures)
+            sleep(ADD_DELAY_MS / 1000)
+
+if __name__ == "__main__":
+    main()
