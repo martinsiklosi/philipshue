@@ -16,8 +16,13 @@ BASE_URL = url = f"http://{BRIDGE_IP}/api/{USERNAME}"
 class Light:
     def __init__(self, nr: int) -> None:
         self.nr = nr
+        self.name = self._name()
         self.supports_rgb = self._supports_rgb()
         self.is_from_ikea = self._is_from_ikea()
+
+    def _name(self) -> str:
+        name = self.get_state()["name"]
+        return name
 
     def _supports_rgb(self) -> bool:
         state = self.get_state()["state"]

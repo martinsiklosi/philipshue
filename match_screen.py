@@ -1,3 +1,5 @@
+import os
+import platform
 from time import sleep
 from concurrent.futures import ThreadPoolExecutor, wait
 
@@ -7,11 +9,10 @@ from rgb import brighten_rgb
 
 
 TRANSITION_TIME_MS = 400
-ADD_DELAY_MS = 400
 BRIGHTNESS_FACTOR = 1.5
 MAX_WORKERS = 16
-        
-        
+
+
 def get_suitible_and_unsuitible_lights() -> tuple[list[Light], list[Light]]:
     lights = get_lights()
     suitible_lights = []
@@ -24,14 +25,30 @@ def get_suitible_and_unsuitible_lights() -> tuple[list[Light], list[Light]]:
     return suitible_lights, unsuitible_lights
 
 
-def set_light_state(light: Light,
-                    rgb_value: tuple[int, int, int],
-                    brightness_factor: float,
-                    trans_time_ms: int,
-                    ) -> None:
-    rgb_value = brighten_rgb(rgb=rgb_value, factor=brightness_factor)
-    res = light.set_state(rgb=rgb_value, time_ms=trans_time_ms)
-    print(res)
+def set_light_state(
+    light: Light,
+    rgb_value: tuple[int, int, int],
+    trans_time_ms: int,
+) -> None:
+    light.set_state(rgb=rgb_value, time_ms=trans_time_ms)
+
+
+def clear_terminal() -> None:
+    current_os = platform.system()
+    if current_os == "Windows":
+        os.system("cls")
+    else:
+        os.system("clear")
+
+
+def print_state(lights: list[Light], rgb_values: list[tuple[int, int, int]]) -> None:
+    clear_terminal()
+    print(f"{TRANSITION_TIME_MS = }")
+    print(f"{BRIGHTNESS_FACTOR = }")
+    print(f"{MAX_WORKERS = }")
+    print()
+    for light, rgb_value in zip(lights, rgb_values):
+        print(f"{light.name.lower()} = {rgb_value}")
 
 
 def main() -> None:
@@ -41,16 +58,21 @@ def main() -> None:
 
     while True:
         rgb_values = screen_rgb_stripes(len(suitible_lights))
+        rgb_values = [
+            brighten_rgb(rgb_value, BRIGHTNESS_FACTOR) for rgb_value in rgb_values
+        ]
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
             futures = []
             for light, rgb_value in zip(suitible_lights, rgb_values):
-                futures.append(executor.submit(set_light_state,
-                                            light,
-                                            rgb_value,
-                                            BRIGHTNESS_FACTOR,
-                                            TRANSITION_TIME_MS))
+                futures.append(
+                    executor.submit(
+                        set_light_state, light, rgb_value, TRANSITION_TIME_MS
+                    )
+                )
             wait(futures)
-            sleep(ADD_DELAY_MS / 1000)
+        print_state(suitible_lights, rgb_values)
+        sleep(TRANSITION_TIME_MS / 1000)
+
 
 if __name__ == "__main__":
     main()
