@@ -8,8 +8,8 @@ from screen import screen_rgb_stripes, screen_rgb_cubes
 from rgb import brighten_rgb
 
 
-TRANSITION_TIME_MS = 400
-BRIGHTNESS_FACTOR = 1.5
+TRANSITION_TIME_MS = 800
+BRIGHTNESS_FACTOR = 1.2
 MAX_WORKERS = 16
 
 
