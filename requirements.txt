@@ -1,0 +1,6 @@
+colour-science==0.4.6
+requests==2.32.4
+python-dotenv==1.1.1
+mss==10.0.0
+numpy==2.3.2
+matplotlib==3.10.5
