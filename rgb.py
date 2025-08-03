@@ -19,8 +19,6 @@ def brighten_rgb(rgb: Iterable[int], factor: float) -> tuple[int, int, int]:
     max_factor = 255 / max(1, max(rgb))
     factor = min(factor, max_factor)
 
-    brightened_rgb = [round(factor*val)
-                      for val in rgb]
-    cut_rgb = [max(0, min(255, val))
-               for val in brightened_rgb]
-    return tuple(cut_rgb)
+    brightened_rgb = [round(factor * val) for val in rgb]
+    cut_rgb = [max(0, min(255, val)) for val in brightened_rgb]
+    return tuple(cut_rgb)  # type: ignore
