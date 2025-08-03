@@ -4,7 +4,7 @@ from time import sleep
 from concurrent.futures import ThreadPoolExecutor, wait
 
 from lights import get_lights, Light, turn_on_all, turn_off_all
-from screen import screen_rgb_stripes, screen_rgb_cubes
+from screen import sample_colors_from_screen
 from rgb import brighten_rgb
 
 
@@ -57,7 +57,7 @@ def main() -> None:
     turn_off_all(unsuitible_lights)
 
     while True:
-        rgb_values = screen_rgb_stripes(len(suitible_lights))
+        rgb_values = sample_colors_from_screen(len(suitible_lights))
         rgb_values = [
             brighten_rgb(rgb_value, BRIGHTNESS_FACTOR) for rgb_value in rgb_values
         ]

@@ -2,59 +2,27 @@ from mss import mss
 import numpy as np
 
 
-# def screen_rgb_stripes(n: int) -> list[tuple[int, int, int]]:
-#     with mss() as sct:
-#         screen = np.array(sct.grab(sct.monitors[0]))
-#         # Dropping the alpha channel if present
-#         screen = screen[..., 2::-1]
-#         segment_width = screen.shape[1] // n
-#         segment_rgb_list = []
-#         for i in range(n):
-#             segment = screen[:, i * segment_width: (i + 1) * segment_width, :]
-#             average_color = segment.mean(axis=(0, 1))
-#             segment_rgb_list.append(tuple(map(int, average_color)))
-#         return segment_rgb_list
+def screen_locations(n: int, h: int, w: int, buffer: int) -> list[tuple[int, int]]:
+    rng = np.random.default_rng(seed=n + h + w)
+    random_h = rng.integers(low=buffer, high=h - buffer, size=n)
+    random_w = rng.integers(low=buffer, high=w - buffer, size=n)
+    coordinates = [(int(x), int(y)) for x, y in zip(random_h, random_w)]
+    return coordinates
 
 
-def screen_rgb_stripes(n: int) -> list[tuple[int, int, int]]:
-    with mss() as sct:
-        screen = np.array(sct.grab(sct.monitors[0]))
-        # Dropping the alpha channel if present
-        screen = screen[..., 2::-1]
-
-        # Calculate the coordinates to crop to a 4:3 aspect ratio
-        height, width, _ = screen.shape
-        new_width = min(width, int(height * 4 / 3))
-        new_height = min(height, int(width * 3 / 4))
-        left = (width - new_width) // 2
-        top = (height - new_height) // 2
-        right = left + new_width
-        bottom = top + new_height
-
-        # Crop the screen to the 4:3 ratio
-        screen = screen[top:bottom, left:right, :]
-
-        segment_width = screen.shape[1] // n
-        segment_rgb_list = []
-        for i in range(n):
-            segment = screen[:, i * segment_width: (i + 1) * segment_width, :]
-            average_color = segment.mean(axis=(0, 1))
-            segment_rgb_list.append(tuple(map(int, average_color)))
-        return segment_rgb_list
-
-
-def screen_rgb_cubes(n: int) -> list[tuple[int, int, int]]:
+def sample_colors_from_screen(n: int) -> list[tuple[int, int, int]]:
     with mss() as sct:
         screen = np.array(sct.grab(sct.monitors[0]))
         screen = screen[..., 2::-1]
-        h, w, _ = screen.shape
-        cube_height, cube_width = h // 16, w // 8
-        cubes = screen[:cube_height*16, :cube_width *
-                       8].reshape(16, cube_height, 8, cube_width, 3)
-        mean_colors = cubes.mean(axis=(1, 3)).astype(int)
-        all_colors = [tuple(color) for color in mean_colors.reshape(-1, 3)]
 
-        # Find the largest step that will return at least n colors
-        step = len(all_colors) // n if len(all_colors) >= n else 1
+    h, w, _ = screen.shape
+    radius = min(h, w) // 10
+    coordinates = screen_locations(n=n, h=h, w=w, buffer=radius)
 
-        return all_colors[::step]
+    colors = []
+    for x, y in coordinates:
+        pixels = screen[x - radius : x + radius, y - radius : y + radius]
+        color = np.mean(pixels, axis=(0, 1))
+        colors.append(color)
+
+    return colors
