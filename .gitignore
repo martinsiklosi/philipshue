@@ -10,4 +10,4 @@
 auth.ipynb
 
 # Virtualenv
-.venv
+.venv*
