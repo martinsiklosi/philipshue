@@ -8,3 +8,6 @@
 # Notebooks
 .ipynb
 auth.ipynb
+
+# Virtualenv
+.venv
