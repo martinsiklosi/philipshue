@@ -1,6 +1,7 @@
 import os
 import platform
 from time import sleep
+from contextlib import contextmanager
 from concurrent.futures import ThreadPoolExecutor, wait
 
 from lights import get_lights, Light, turn_on_all, turn_off_all
@@ -51,27 +52,39 @@ def print_state(lights: list[Light], rgb_values: list[tuple[int, int, int]]) -> 
         print(f"{light.name.lower()} = {rgb_value}")
 
 
-def main() -> None:
-    suitible_lights, unsuitible_lights = get_suitible_and_unsuitible_lights()
-    turn_on_all(suitible_lights)
-    turn_off_all(unsuitible_lights)
+@contextmanager
+def restore_original_state():
+    all_lights = get_lights()
+    all_states = [light.get_state()["state"] for light in all_lights]
+    try:
+        yield
+    finally:
+        for light, state in zip(all_lights, all_states):
+            light.set_state(**state)
 
-    while True:
-        rgb_values = sample_colors_from_screen(len(suitible_lights))
-        rgb_values = [
-            brighten_rgb(rgb_value, BRIGHTNESS_FACTOR) for rgb_value in rgb_values
-        ]
-        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-            futures = []
-            for light, rgb_value in zip(suitible_lights, rgb_values):
-                futures.append(
-                    executor.submit(
-                        set_light_state, light, rgb_value, TRANSITION_TIME_MS
+
+def main() -> None:
+    with restore_original_state():
+        suitible_lights, unsuitible_lights = get_suitible_and_unsuitible_lights()
+        turn_on_all(suitible_lights)
+        turn_off_all(unsuitible_lights)
+
+        while True:
+            rgb_values = sample_colors_from_screen(len(suitible_lights))
+            rgb_values = [
+                brighten_rgb(rgb_value, BRIGHTNESS_FACTOR) for rgb_value in rgb_values
+            ]
+            with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+                futures = []
+                for light, rgb_value in zip(suitible_lights, rgb_values):
+                    futures.append(
+                        executor.submit(
+                            set_light_state, light, rgb_value, TRANSITION_TIME_MS
+                        )
                     )
-                )
-            wait(futures)
-        print_state(suitible_lights, rgb_values)
-        sleep(TRANSITION_TIME_MS / 1000)
+                wait(futures)
+            print_state(suitible_lights, rgb_values)
+            sleep(TRANSITION_TIME_MS / 1000)
 
 
 if __name__ == "__main__":
